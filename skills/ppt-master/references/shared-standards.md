@@ -702,6 +702,39 @@ Rotation converts to native PPTX `<a:xfrm rot="...">`. Supported on all element 
 
 **Syntax**: `rotate(angle)` or `rotate(angle, cx, cy)` where `cx,cy` is the rotation center. Positive angles rotate clockwise.
 
+### Scaled Canvas Templates — Content Area Rules
+
+Some templates wrap all content in `<g transform="scale(0.5)">` so that source-deck coordinates (typically 2560 × 1440) render correctly inside the canonical 1280 × 720 viewBox. When generating content for these templates:
+
+1. **Write coordinates in the source space** — place elements directly inside the `scale(0.5)` group using 2560 × 1440 coordinates. The transform scales them to 1280 × 720 automatically.
+2. **Do NOT use nested `<svg>` for content areas** — the PPTX converter maps `<svg>` tags to sprite-crop image handling (`convert_nested_svg`), which drops non-image shapes (rect, text, path, etc.). Content inside a nested `<svg viewBox="...">` will be silently lost.
+3. **If coordinate remapping is needed**, use `<g transform="matrix(a 0 0 d tx ty)">` instead of nested `<svg>`. The converter decomposes matrix transforms and applies them correctly to child shapes, strokes, and text.
+4. **Stroke-width is scaled automatically** — the converter multiplies stroke-width by the accumulated context scale (matching SVG spec). Write stroke-widths in the source-space value; do not pre-multiply by 0.5.
+
+```xml
+<!-- ✅ CORRECT: content in source space inside scale(0.5) group -->
+<g id="content-page" transform="scale(0.5)">
+  <g id="content-area">
+    <rect x="80" y="220" width="1120" height="680" rx="10" fill="#FFF"/>
+    <text x="120" y="280" font-size="28" fill="#333">Content here</text>
+  </g>
+</g>
+
+<!-- ✅ CORRECT: matrix transform for coordinate remapping -->
+<g id="content-area">
+  <g transform="matrix(1.6 0 0 1.6 248 185)">
+    <rect x="60" y="120" width="560" height="340" rx="10" fill="#FFF"/>
+  </g>
+</g>
+
+<!-- ❌ WRONG: nested <svg> drops non-image content in PPTX -->
+<g id="content-area">
+  <svg x="80" y="185" width="2400" height="1160" viewBox="0 0 1280 720">
+    <rect x="60" y="120" width="560" height="340" rx="10" fill="#FFF"/>  <!-- LOST -->
+  </svg>
+</g>
+```
+
 ### Arc Paths — Donut / Pie Charts
 
 Calculate arc endpoint coordinates precisely with trigonometry. Never estimate — small errors produce wildly wrong shapes.

@@ -23,6 +23,10 @@
   <g id="content-page-title">
     <text x="205" y="142" text-anchor="start" xml:space="preserve" font-size="50" font-weight="700" fill="#3E4451">{{PAGE_TITLE}}</text>
   </g>
+  <!-- Content area: source-space bounds x=80..2480 y=220..1340 (display: x=40..1240 y=110..670).
+       Generate content in 2560×1440 source coordinates directly inside the scale(0.5) group.
+       Do NOT wrap content in a nested <svg> — use <g transform="matrix(...)"> if remapping is needed.
+       See shared-standards.md §"Scaled Canvas Templates" for details. -->
   <g id="content-area">
     <rect x="80" y="220" width="2400" height="1120" fill="none" stroke="#94A3B8" stroke-dasharray="14 10" stroke-width="2" opacity="0.45"/>
     <text x="1280" y="790" text-anchor="middle" xml:space="preserve" font-family="Helvetica Neue, 'Microsoft YaHei', 'PingFang SC', sans-serif" font-size="40" letter-spacing="3" fill="#94A3B8" opacity="0.55">{{CONTENT_AREA}}</text>

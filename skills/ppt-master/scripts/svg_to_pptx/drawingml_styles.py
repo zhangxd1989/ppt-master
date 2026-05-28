@@ -347,6 +347,9 @@ def build_stroke_xml(
         return '<a:ln><a:noFill/></a:ln>'
 
     width = _f(_get_attr(elem, 'stroke-width', ctx), 1.0)
+    # Scale stroke-width by context transform (matches SVG spec: parent
+    # scale() affects stroke-width the same way it affects coordinates).
+    width *= (ctx.scale_x + ctx.scale_y) / 2
     width_emu = px_to_emu(width)
 
     # Dash pattern

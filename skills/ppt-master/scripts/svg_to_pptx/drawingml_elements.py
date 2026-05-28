@@ -945,7 +945,11 @@ def _build_text_fill_xml(
 
 
 def _build_text_outline_xml(run: dict[str, Any]) -> str:
-    """Build DrawingML outline XML for a text run from SVG stroke attributes."""
+    """Build DrawingML outline XML for a text run from SVG stroke attributes.
+
+    stroke_width in *run* is expected to be already scaled by the caller
+    (convert_text scales it via ctx before storing in parent_attrs).
+    """
     stroke_raw = run.get('stroke_raw')
     if not stroke_raw or stroke_raw == 'none':
         return ''
@@ -1024,6 +1028,8 @@ def convert_text(elem: ET.Element, ctx: ConvertContext) -> ShapeResult | None:
     opacity = get_fill_opacity(elem, ctx)
     stroke_raw = _get_attr(elem, 'stroke', ctx) or ''
     stroke_width = _f(_get_attr(elem, 'stroke-width', ctx), 1.0)
+    # Scale stroke-width by context transform (SVG spec: parent scale affects strokes).
+    stroke_width *= (ctx.scale_x + ctx.scale_y) / 2
     stroke_opacity = get_stroke_opacity(elem, ctx)
     font_style = _get_attr(elem, 'font-style', ctx) or ''
     text_decoration = _get_attr(elem, 'text-decoration', ctx) or ''

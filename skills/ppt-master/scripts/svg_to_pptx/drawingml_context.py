@@ -138,8 +138,11 @@ class ConvertContext:
             defs=self.defs,
             id_counter=self.id_counter,
             slide_num=self.slide_num,
-            translate_x=self.translate_x + dx,
-            translate_y=self.translate_y + dy,
+            # When composing transforms, the parent's scale applies to the
+            # child's translation.  scale(s) ∘ translate(dx,dy) yields a
+            # combined translation of (s*dx, s*dy), not (dx, dy).
+            translate_x=self.translate_x + self.scale_x * dx,
+            translate_y=self.translate_y + self.scale_y * dy,
             scale_x=self.scale_x * sx,
             scale_y=self.scale_y * sy,
             transform_matrix=combined_matrix,
