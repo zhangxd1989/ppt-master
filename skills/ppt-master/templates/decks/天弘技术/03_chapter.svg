@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="1280" height="720" viewBox="0 0 1280 720" font-family="Helvetica Neue, 'Microsoft YaHei', 'PingFang SC', sans-serif">
+<defs>
+<linearGradient id="ggrad1" x1="0" y1="0" x2="1" y2="0"><stop offset="0.1602" stop-color="#B7002E" stop-opacity="0"/><stop offset="0.9971" stop-color="#B7002E" stop-opacity="0.6"/></linearGradient>
+</defs>
+<rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+<g id="chapter-page" transform="scale(0.5)">
+  <g id="chapter-hero">
+    <svg x="1479.72" y="722.37" width="1080.28" height="718.34" viewBox="0 0 0.93115 1" preserveAspectRatio="none">
+      <image href="assets/image4.png" x="0" y="0" width="1" height="1" preserveAspectRatio="none"/>
+    </svg>
+  </g>
+  <g id="chapter-bg-dots">
+    <image href="assets/image5.png" x="-0.1" y="567.82" width="1051.49" height="730.31" preserveAspectRatio="none"/>
+  </g>
+  <g id="chapter-bottom-bar">
+    <path d="M 1133.48 1234.04 L 54.16 1234.04 C 24.17 1234.04 -0.25 1208.22 -0.25 1176.37 L -0.25 1440.71 L 2560.25 1440.71 L 2560.25 1170.44 C 2560.25 1205.56 2533.34 1234.04 2500.27 1234.04 L 1425.81 1234.04 C 1409.92 1234.04 1394.63 1240.76 1383.37 1252.71 L 1322.08 1317.73 C 1298.61 1342.61 1260.56 1342.61 1237.21 1317.73 L 1175.92 1252.71 C 1164.66 1240.76 1149.37 1234.04 1133.48 1234.04 Z" fill="#B7002E"/>
+  </g>
+  <g id="chapter-chevron">
+    <path d="M 1280 1200.57 L 1280 1261.53 M 1280 1261.53 L 1297.67 1239.21 M 1280 1261.53 L 1262.33 1239.21" stroke-width="6.667" stroke-linecap="round" stroke="#C60007" fill="none"/>
+  </g>
+  <g id="chapter-title">
+    <text x="1280" y="610" text-anchor="middle" xml:space="preserve" font-size="80" font-weight="700" fill="#3E4451">{{CHAPTER_TITLE}}</text>
+  </g>
+  <g id="chapter-number-ribbon"><path d="M 1376.1100,362.0300 L 1178.5800,361.5400 M 1178.5800,361.5400 C 1178.3200,358.4500 1179.1300,355.3600 1180.9700,352.5400 C 1182.6100,350.0200 1185.0100,347.7800 1188.0100,345.9800 L 1266.9600,272.7600 C 1268.6100,271.4800 1270.5900,270.4400 1272.8000,269.6900 C 1274.2500,269.1900 1275.7900,268.8200 1277.4000,268.7300 C 1281.1000,268.5000 1284.7000,269.6700 1286.8400,271.8000 L 1366.0000,345.7200 C 1369.0600,347.6700 1371.5300,350.0300 1373.2600,352.6500 C 1375.2100,355.5900 1376.1800,358.8000 1376.1100,362.0300" fill="url(#ggrad1)" /></g>
+  <g id="chapter-number-badge"><path d="M 1268.5661,476.3458 L 1200.9242,408.7039 A 16.1700,16.1700 225.0000 0 1 1200.9242,385.8361 L 1268.5661,318.1942 A 16.1700,16.1700 225.0000 0 1 1291.4339,318.1942 L 1359.0758,385.8361 A 16.1700,16.1700 225.0000 0 1 1359.0758,408.7039 L 1291.4339,476.3458 A 16.1700,16.1700 225.0000 0 1 1268.5661,476.3458 Z" fill="#FFFFFF" stroke-width="2.667" stroke="#B7002E" stroke-opacity="0.5" /></g>
+  <g id="chapter-number-text">
+    <text x="1280" y="419.67" text-anchor="middle" xml:space="preserve" font-size="64" font-weight="700" fill="#B7002E">{{CHAPTER_NUMBER}}</text>
+  </g>
+  <g id="chapter-accent-1">
+    <rect x="2386.49" y="440.8" width="66.67" height="66.67" fill="#B7002E"/>
+  </g>
+  <g id="chapter-accent-2">
+    <rect x="2409.16" y="76.21" width="53.33" height="53.33" fill="#B7002E"/>
+  </g>
+  <g id="chapter-accent-3">
+    <rect x="2305.71" y="212.23" width="40" height="40" fill="#B7002E"/>
+  </g>
+  <g id="chapter-subtitle">
+    <text x="1280" y="700" text-anchor="middle" xml:space="preserve" font-size="44" fill="#3E4451" fill-opacity="0.75">{{CHAPTER_SUBTITLE}}</text>
+  </g>
+</g>
+</svg>

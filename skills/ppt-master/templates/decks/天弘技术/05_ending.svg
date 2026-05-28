@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="1280" height="720" viewBox="0 0 1280 720" font-family="Helvetica Neue, 'Microsoft YaHei', 'PingFang SC', sans-serif">
+<rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+<g id="ending-page" transform="scale(0.5)">
+  <g id="ending-red-panel">
+    <rect x="72" y="74.67" width="2416" height="1290.67" fill="#B7002E"/>
+  </g>
+  <g id="ending-overlay-curve-1">
+    <path d="M 72 74.67 L 72 1186.54 C 457.02 1128.37 827.55 951.19 1124.07 654.69 C 1296.3 482.46 1428.3 285.2 1520.08 74.67 L 72 74.67 Z" fill="#FFFFFF" fill-opacity="0.03"/>
+  </g>
+  <g id="ending-overlay-curve-2">
+    <path d="M 72 74.67 L 72 1050.79 C 77.88 1045.1 83.8 1039.45 89.62 1033.62 C 357.28 766 505.86 424.44 535.58 74.67 L 72 74.67 Z" fill="#FFFFFF" fill-opacity="0.03"/>
+  </g>
+  <g id="ending-center-image">
+    <image href="assets/image42.png" x="872" y="644.84" width="816" height="119.61" preserveAspectRatio="xMidYMid meet"/>
+  </g>
+</g>
+</svg>
