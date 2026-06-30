@@ -47,10 +47,16 @@ class ConvertContext:
     # Top-level <g id="..."> groups, recorded as (shape_id, svg_id) in z-order.
     # Used by the PPTX builder to emit per-element entrance timing.
     anim_targets: list = field(default_factory=list)
-    # Opt-in flag (default off): merge mergeable paragraph blocks into one
-    # editable text frame with multiple <a:p>. Off preserves the original
-    # one-line-per-textbox behavior and the SVG's exact pixel layout.
-    merge_paragraphs: bool = False
+    # Default-on flag: merge mergeable paragraph blocks into one editable
+    # text frame with multiple <a:p>. Disable it for strict line fidelity.
+    merge_paragraphs: bool = True
+    # Native PPTX image optimization. Keeps generated decks compact by
+    # downsampling oversized raster assets to their rendered size.
+    image_optimize: bool = True
+    image_max_dimension: int | None = 2560
+    image_sizing: str = 'cap'
+    image_scale: float = 2.0
+    image_quality: int = 85
     # Optional per-element conversion diagnostics. Shared by child contexts so
     # callers can inspect native / skipped / unsupported decisions per slide.
     trace_events: list[dict[str, Any]] | None = None
@@ -157,6 +163,11 @@ class ConvertContext:
             # anim_targets is intentionally a fresh list on the child;
             # only the root-level context's list is read by the builder.
             merge_paragraphs=self.merge_paragraphs,
+            image_optimize=self.image_optimize,
+            image_max_dimension=self.image_max_dimension,
+            image_sizing=self.image_sizing,
+            image_scale=self.image_scale,
+            image_quality=self.image_quality,
             trace_events=self.trace_events,
         )
 

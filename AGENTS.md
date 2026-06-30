@@ -10,23 +10,14 @@ PPT Master is an AI-driven presentation generation system. Multi-role collaborat
 
 **Core Pipeline**: `Source Document → Create Project → [Template] → Strategist Eight Confirmations → [Image_Generator] → Executor Live Preview → Quality Check → Post-processing → Export PPTX`
 
-> Topic-only requests with no source material: run the standalone [`topic-research`](skills/ppt-master/workflows/topic-research.md) workflow before SKILL.md Step 1 to gather web materials.
->
-> Template fill: when the user provides an existing `.pptx` template plus text materials or a topic and asks to reuse the original PPT design or fill content back into it (for example, "fill this deck with the new content", "fill this back into the template", or "reuse this deck's design"), run the standalone [`template-fill-pptx`](skills/ppt-master/workflows/template-fill-pptx.md) workflow. This route edits PPTX directly and must not enter the SVG generation pipeline.
->
-> Phase B resumption (split-mode execution): when the user opens a fresh chat and says "继续生成 projects/<x>" or similar, run the standalone [`resume-execute`](skills/ppt-master/workflows/resume-execute.md) workflow to enter Phase B (SVG generation + export) without re-running Phase A.
->
-> Decks containing data charts: run the standalone [`verify-charts`](skills/ppt-master/workflows/verify-charts.md) workflow between the executor and post-processing steps to calibrate chart coordinates.
->
-> Recorded narration / video export: run the standalone [`generate-audio`](skills/ppt-master/workflows/generate-audio.md) workflow after post-processing.
->
-> Object-level animation tuning: when the user asks to change animation order, effect, timing, or a specific object's reveal behavior, run the standalone [`customize-animations`](skills/ppt-master/workflows/customize-animations.md) workflow. Default export already has global animations; do not create `animations.json` unless customization was requested.
->
-> Live preview: any time the user mentions "live preview", "preview", "看效果", or wants to click/select a slide element, run [`live-preview`](skills/ppt-master/workflows/live-preview.md). Step 6 auto-starts it during generation; the workflow covers post-export re-entry and applying submitted annotations.
->
-> Brand identity setup: when the user asks to "set up brand" / "建立品牌" / "做品牌规范", provides a brand asset (logo / brand site URL / branded PPTX / brand PDF), or wants to extract a brand from existing materials, run the standalone [`create-brand`](skills/ppt-master/workflows/create-brand.md) workflow. Output goes to `skills/ppt-master/templates/brands/<id>/`. Brands apply at SKILL.md Step 3 via the same explicit-path rule as layout templates — the user supplies the brand directory path to apply it; bare brand names never trigger.
->
-> Visual self-check: only when the user explicitly requests a per-page visual review on the generated SVGs (e.g., "跑一下视觉自检 / 视觉回看 / 视觉 rubric", "visual review", "check each page visually"), run the standalone [`visual-review`](skills/ppt-master/workflows/visual-review.md) workflow between the executor and post-processing steps. The main pipeline does NOT invoke it automatically; do not infer or recommend it from deck size, model identity, or any other signal — user request is the only trigger.
+**Route selection authority**: [`skills/ppt-master/workflows/routing.md`](skills/ppt-master/workflows/routing.md) owns the complete route matrix. The hard boundaries below stay inline because they bypass or redirect the main pipeline and are the most expensive to misroute.
+
+- Topic-only requests run [`topic-research`](skills/ppt-master/workflows/topic-research.md) before SKILL.md Step 1.
+- Raw PPTX template plus new material/topic routes to [`template-fill-pptx`](skills/ppt-master/workflows/template-fill-pptx.md), not the SVG pipeline.
+- Raw PPTX cannot be consumed as a Step 3 SVG template; run [`create-template`](skills/ppt-master/workflows/create-template.md) first and return with the generated template directory path.
+- PPTX beautify is strictly 1:1 page count/order and verbatim wording via [`beautify-pptx`](skills/ppt-master/workflows/beautify-pptx.md); any split/merge/drop/reorder routes to the main pipeline.
+- Finished PPTX native enhancement uses [`native-enhance-pptx`](skills/ppt-master/workflows/native-enhance-pptx.md) and must not enter SVG regeneration.
+- [`visual-review`](skills/ppt-master/workflows/visual-review.md), [`customize-animations`](skills/ppt-master/workflows/customize-animations.md), and [`generate-audio`](skills/ppt-master/workflows/generate-audio.md) are explicit-request workflows.
 
 ## Execution Requirements
 
@@ -63,6 +54,12 @@ python3 skills/ppt-master/scripts/project_manager.py init <project_name> --forma
 python3 skills/ppt-master/scripts/project_manager.py import-sources <project_path> <source_files_or_URLs...> --move
 python3 skills/ppt-master/scripts/project_manager.py validate <project_path>
 
+# Icon selection — copy chosen library icons into <project>/icons/ (missing names reported + non-zero = re-pick)
+python3 skills/ppt-master/scripts/icon_sync.py <project_path> <lib/name> [<lib/name>...]
+
+# Step 4 Eight Confirmations — interactive visual page (default auto-launch; chat fallback)
+python3 skills/ppt-master/scripts/confirm_ui/server.py <project_path> --daemon --wait
+
 # Image tools and SVG quality check
 python3 skills/ppt-master/scripts/analyze_images.py <project_path>/images
 # In-pipeline AI image generation — manifest mode (required, even for 1 image):
@@ -70,16 +67,23 @@ python3 skills/ppt-master/scripts/image_gen.py --manifest <project_path>/images/
 python3 skills/ppt-master/scripts/image_gen.py --render-md <project_path>/images/image_prompts.json
 # Out-of-pipeline one-off / debug / single-image fixup only (no manifest, no sidecar):
 python3 skills/ppt-master/scripts/image_gen.py "prompt" --aspect_ratio 16:9 --image_size 1K -o <project_path>/images
-python3 skills/ppt-master/scripts/svg_editor/server.py <project_path> --live
+# Spot illustrations — slice one AI grid sheet into individual elements (see image-generator.md §4.3):
+python3 skills/ppt-master/scripts/slice_images.py <project_path>/images/<sheet>.png --grid RxC --names a,b,c --trim --alpha
+python3 skills/ppt-master/scripts/svg_editor/server.py <project_path> --live --daemon
 python3 skills/ppt-master/scripts/svg_quality_checker.py <project_path>
 python3 skills/ppt-master/scripts/animation_config.py scaffold <project_path>  # optional, only for custom object-level animation
 python3 skills/ppt-master/scripts/animation_config.py validate <project_path>  # optional, before re-export
+
+# Existing PPTX native enhancement workflow — direct OOXML patch, no SVG conversion
+python3 skills/ppt-master/scripts/native_enhance_pptx.py init <PPTX_file> --name <project_slug>
+python3 skills/ppt-master/scripts/native_enhance_pptx.py validate <project_path>
+python3 skills/ppt-master/scripts/native_enhance_pptx.py apply <project_path>
 
 # Post-processing pipeline: run sequentially, one command at a time
 python3 skills/ppt-master/scripts/total_md_split.py <project_path>
 python3 skills/ppt-master/scripts/finalize_svg.py <project_path>
 python3 skills/ppt-master/scripts/svg_to_pptx.py <project_path>
-# Add --merge-paragraphs when the user wants paragraph-level editable text frames instead of one-per-line (default off, see SKILL.md Step 7.3).
+# Mergeable dy-stacked paragraph blocks collapse into one editable text frame by default; add --no-merge to keep every line as its own frame (strict line fidelity). See SKILL.md Step 7.3.
 ```
 
 ## Core Directories

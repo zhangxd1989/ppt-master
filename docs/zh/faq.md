@@ -42,31 +42,52 @@ PPT Master 可以在任何能读取文件和执行命令的 AI 编程代理中�
 
 如果想要更现代的商业风照片，建议在 `.env` 里设置 `PEXELS_API_KEY` 和/或 `PIXABAY_API_KEY`（都是免费申请）。搜索会自动纳入 Pexels / Pixabay，人物、办公、生活方式、产品和插画类图片质量通常会明显更稳定。两种路径可以在同一份 deck 里混用（比如 hero 图用 AI 生成、团队照片用网络搜索）；如果选中的图片需要署名，Executor 会在该幻灯片自动添加就地小字署名。
 
+要清楚一点：**网络搜索只负责「找到一张相关、可下载、授权合规的图」，并不保证它在这一页里好看或贴切**——排序只看文字元数据，看不到画面。生成时多模态模型会读一份缩略图自查、不合适会重搜；但**要真正高质量，最可靠的还是你自己去搜**：在任何来源找到更合适的图，把链接给 AI，它会用 `image_search.py --from-url <链接>` 直接下载替换（记为手动来源、版权由你把关）。换图随时能做——生成途中或在实时预览里都行，不会打断流程。简而言之：把网络搜索当「兜底占位」，把人工挑图当「精修」。
+
 ## Q: 生成的 PPT 可以编辑吗？
 
 可以。主 `.pptx`（原生 PowerPoint 形状，文字、图形、颜色均可直接编辑，无需转换）以时间戳命名保存至 `exports/`。Executor 的原始 SVG 源（`svg_output/` 副本）始终镜像到 `backup/<timestamp>/svg_output/`，便于归档或基于该版重跑 `finalize_svg → svg_to_pptx` 重建 pptx，无需再走 LLM。加 `--svg-snapshot` 会额外在 `exports/` 内并排生成 SVG 快照版 pptx，便于跨平台单文件分发；默认关闭——日常开发/诊断场景中 live preview 已经提供了 SVG 视觉参考。需要 **Office 2016** 或更高版本。
 
 ## Q: 为什么一段正文被拆成了好几个文本框？能不能一段一个文本框？
 
-默认就是按行拆框——SVG 里的每一视觉行都会变成一个独立的 PowerPoint 文本框。这样做是为了**逐像素保留 SVG 的版式**，对封面、图表、表格、以及任何对版式精度敏感的页面来说是必要的。
+默认会把可合并的正文段落导出成一个可编辑的 PowerPoint 文本框，内部保留多个段落。**拉伸框时文字会在框内自动重排**。
 
-如果你希望按整段编辑正文，重新导出时加上 `--merge-paragraphs`：
+如果你需要严格保持逐行版式，重新导出时加上 `--no-merge`：
 
 ```bash
-python3 skills/ppt-master/scripts/svg_to_pptx.py <project_path> --merge-paragraphs
+python3 skills/ppt-master/scripts/svg_to_pptx.py <project_path> --no-merge
 ```
 
-可合并的段落块（同 x、dy 围绕同一行距聚集、段间允许更大间距）会合并成一个可编辑的文本框，内部为多个 `<a:p>`，并精确保留行距。**拉伸框时文字会在框内自动重排**。
+使用 `--no-merge` 时，SVG 里的每一视觉行都会变成一个独立的 PowerPoint 文本框。这样能**逐像素保留 SVG 的版式**，适合封面、图表、表格、以及任何对版式精度敏感的页面。
 
-**代价**：PowerPoint 自动换行后，行数可能与原 SVG 不一致——页面版式会与原 SVG 有偏差。适合正文密集型页面（abstract、多段落章节、参考文献等）；版式敏感的页面继续用默认。判定足够保守——非段落型 `<text>` 会自动落回默认的按行拆框路径。
+**代价**：默认段落合并后，PowerPoint 自动换行的行数可能与原 SVG 不一致。默认更适合正文密集型页面（abstract、多段落章节、参考文献等）；版式敏感页面使用 `--no-merge`。判定足够保守——非段落型 `<text>` 会自动落回按行拆框路径。
 
-跟 AI 对话时也可以直接说："我想整段编辑 abstract" / "让文本框能自适应" —— AI 会替你打开这个开关。默认关闭，不影响已有项目。
+跟 AI 对话时也可以直接说："这个页面要严格保持逐行版式" —— AI 重新导出时会加上 `--no-merge`。
 
-## Q: 三种执行师有什么区别？
+## Q: 字号为什么用 px 不是 pt？导出后字号会变吗？
 
-- **Executor_General**: 通用场景，灵活布局
-- **Executor_Consultant**: 一般咨询，数据可视化
-- **Executor_Consultant_Top**: 顶级咨询（MBB 级），5 大核心技巧
+PPT Master 内部**全程只用 px**（无单位像素）——确认页、`spec_lock.md`、SVG 都是 px，没有 pt 这一层。原因是 SVG 画布本身就是 1280×720 px，px 是真正的排版/执行单位；只用一个单位，能避免「确认时说 20pt、写进 SVG 又变成另一个数」这类单位混淆导致整套字号偏差。
+
+PowerPoint 最终显示的是 pt，所以**导出时**自动把 px 换成 pt（`pt = px × 0.75`，保留 1 位小数）。例如正文 `24px` 导出后是 `18pt`、标题 `42px` 是 `31.5pt`。所以你在 PowerPoint 里看到 `13.5pt`、`31.5pt` 这种非整数是**正常的、有意的**，不是 bug——字号算出来是多少就是多少，不再强行凑成整数或半磅。
+
+正文基准按**交付目的**固定取值（不是区间）：
+
+| 交付目的 | 正文 px | ≈ 导出 pt |
+|---|---|---|
+| `text` 文字型（近读：报告 / 资料） | 20px | 15pt |
+| `balanced` 均衡（默认：路演 / 评审） | 24px | 18pt |
+| `presentation` 展示型（投影 / 发布） | 32px | 24pt |
+
+标题、副标题、脚注等其它角色按比例从正文派生，并取整洁偶数 px。你在确认页可以手动覆盖任何角色的 px 值。
+
+## Q: PPT Master 怎么确定演示的风格？
+
+在第 d 项确认时锁定两个独立维度：
+
+- **Mode（怎么讲）**：`pyramid` / `narrative` / `instructional` / `showcase` / `briefing` —— 见 `references/modes/`
+- **Visual style（长什么样）**：`swiss-minimal` / `editorial` / `soft-rounded` / `dark-tech` … + `custom` —— 见 `references/visual-styles/`
+
+任意 mode 可与任意 visual style 自由组合。
 
 ## Q: 用 PPT Master 做 PPT 贵吗？
 
@@ -84,14 +105,14 @@ PPT Master 本身免费开源，唯一的成本来自你自己的 AI 模型用�
 
 ## Q: 页面切换和元素动画可以调吗？
 
-可以。页间转场（默认 `fade` 0.4s）和页内元素入场动画（默认 `auto` 效果 + `after-previous` 自动级联，根据每个 group 的 SVG id 自动映射效果——图片类 id 在视觉池中循环以产生 deck 内变化）都通过 `svg_to_pptx.py` 的参数控制——`-t/--transition` 控制页级，`-a/--animation` 控制元素级。常用一行命令：
+可以。页间转场默认开（`fade` 0.4s），页内元素入场动画**默认关**——翻到一页时整页一次性呈现，不会有元素一个个自动级联出来（那种没人要的自动连播正是「AI 味」最重的地方）。两者都通过 `svg_to_pptx.py` 的参数控制——`-t/--transition` 控制页级，`-a/--animation` 控制元素级。想要页内动画时显式开启即可：
 
 ```bash
 python3 skills/ppt-master/scripts/svg_to_pptx.py <project> -t push       # 换转场效果
 python3 skills/ppt-master/scripts/svg_to_pptx.py <project> -t none       # 关闭转场
-python3 skills/ppt-master/scripts/svg_to_pptx.py <project> -a none       # 关闭页内动画
-python3 skills/ppt-master/scripts/svg_to_pptx.py <project> --animation fade        # 改用单一效果（仍是默认级联）
-python3 skills/ppt-master/scripts/svg_to_pptx.py <project> --animation-trigger on-click   # 改为单击触发，演讲者控制节奏
+python3 skills/ppt-master/scripts/svg_to_pptx.py <project> -a auto       # 开启页内元素入场（按 group id 自动映射效果）
+python3 skills/ppt-master/scripts/svg_to_pptx.py <project> --animation fade        # 开启并改用单一效果
+python3 skills/ppt-master/scripts/svg_to_pptx.py <project> -a auto --animation-trigger on-click   # 单击触发，演讲者控制节奏
 ```
 
 `on-click` 适合现场演示。通过 `--recorded-narration` 做旁白/视频导出时会拒绝它，因为 PPT Master 只写页面级计时，不生成对象级点击计时；带旁白的 deck 请使用 `after-previous` 或 `with-previous`。
@@ -152,6 +173,29 @@ python3 skills/ppt-master/scripts/svg_to_pptx.py <project> --animation-trigger o
 可以。你可以**随时中断工作流**——前几页生成后就可以查看并反馈意见。AI 可以根据你的意见重新生成特定页面，不需要等到全部完成再修改。
 
 生成后的修正也一样简单，直接告诉 AI："第 3 页布局有问题——标题和图表重叠了"，它会修正那个特定的 SVG。
+
+## Q: 我手上有一份现成的 PPT，想基于它做东西，该走哪条路？
+
+把「用一份已有 PPT」拆成两个问题：**留不留它的内容**、**留不留它的设计（版式 + 视觉）**。四种组合对应四条路：
+
+| 意图 | 路线 | 固定不变的东西 |
+|---|---|---|
+| 留内容 + 重做版式 | **beautify（美化 / 重排）** | 页数、页序、每页文字、图表/表格数据 |
+| 换内容 + 留设计 | **template-fill（套模板）** | 原生页面设计；可选择、乱序、复用源页 |
+| 只留内容，设计与分页都重来 | **主管线** | 源事实；故事结构和页数都可重构 |
+| 留内容 + 留设计 | 不必生成 | 直接用原文件 |
+
+用 **beautify** 的前提是：原 PPT 的分页本身就是输出要求的一部分。文字逐字不动、页数页序 1:1 保留，只重排版式、层级和留白，并继承原配色字体。典型说法是「把这份 PPT 美化一下 / 重新排版，内容别动」。见 [beautify 工作流](../../skills/ppt-master/workflows/beautify-pptx.md)。
+
+用 **主管线** 的前提是：原 PPT 只是内容材料。流程会用 `ppt_to_md` 抽成 Markdown，并读取 `analysis/` 里的 PPTX intake 事实，再由 Strategist 自由重构大纲（合页 / 拆页 / 换序）。典型说法是「用这份 PPT 的内容重做一份更好的」或「提炼成 10 页高管汇报」。
+
+beautify 和主管线的一句话判别：**原来的分页是要保留的信息，还是只是前一作者的结构、可以推翻？** 保留 → beautify；推翻 → 主管线。落到硬判据就是**页数 / 页序**：只要它有任何变化——拆页、合页、删页、换序，乃至「一字不改、只把某张太挤的页拆开排得更好看」——都属于重分页，走主管线。beautify 严格 1:1。
+
+如果用户说法含糊，比如「把这份 PPT 做得更专业一点」「优化一下这个 deck」，AI 应先问一句：**要保留原页数、页序和每页文字，只做美化；还是把 PPT 当素材，重新梳理成一份新故事？**
+
+还有一条正交的路：如果你不是要现在产出一份 deck，而是想把这套设计**收成可复用模板**供以后反复用，走 **create-template**（见下面「如何制作自定义模板」）。
+
+---
 
 ## Q: 我已经有一份做好的 `.pptx`，能不能复用它的设计、只填新内容？
 
